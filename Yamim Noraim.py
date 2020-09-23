@@ -5,8 +5,11 @@ from pathlib import Path
 import os
 
 from tkinter import ttk
-from tkinter import Tk, StringVar, N, W, E, S
-from tkinter import filedialog
+from tkinter import Tk, StringVar, N, W, E, S, IntVar
+from tkinter import filedialog, PhotoImage
+from tkcalendar import DateEntry
+from datetime import date, timedelta
+from pandas import to_datetime
 
 def FindMIfFloat(x):
     try:
@@ -153,21 +156,49 @@ outputs_filepath = StringVar()
 label = StringVar()
 delete_before = StringVar()
 
-ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=1, sticky=W)
+input_row = 1
+output_row = 2
+date_row = 3
+Label_Row = 4
+
+ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
 inputs_filepath_entry = ttk.Entry(mainframe, width=60, textvariable=inputs_filepath)
-inputs_filepath_entry.grid(column=2, row=1, sticky=(W, E))
-ttk.Button(mainframe, text="Browse", command=file_explore_inputs).grid(column=3, row=1, sticky=W)
+inputs_filepath_entry.grid(column=2, row=input_row, sticky=(W, E), columnspan=2)
+ttk.Button(mainframe, text="Browse", command=file_explore_inputs).grid(column=4, row=input_row, sticky=W)
 
-ttk.Label(mainframe, text="Name of output file").grid(column=1, row=2, sticky=W)
+ttk.Label(mainframe, text="Name of output file").grid(column=1, row=output_row, sticky=W)
 outputs_filepath_entry = ttk.Entry(mainframe, textvariable=outputs_filepath)
-outputs_filepath_entry.grid(column=2, row=2, sticky=(W, E))
-ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=3, row=2, sticky=W)
+outputs_filepath_entry.grid(column=2, row=output_row, sticky=(W, E), columnspan=2)
+ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=4, row=output_row, sticky=W)
 
-ttk.Button(mainframe, text="Run", command=run_process).grid(column=3, row=5, sticky=W)
+ttk.Label(mainframe, text="Delete entries from before:").grid(column=1, row=date_row, sticky=W)
+default_date = date.today() - timedelta(days=1)
+delete_before_entry = DateEntry(mainframe)
+delete_before_entry.set_date(default_date)
+delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
+delete_before_entry.grid_remove()
+
+label = StringVar()
+ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
+label_entry = ttk.Entry(mainframe, textvariable=label)
+label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
+
+def show_or_hide_date():
+    check_flag = delete_flag.get()
+    if check_flag==0:
+        delete_before_entry.grid_remove()
+    elif check_flag==1:
+        delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
+delete_flag = IntVar()
+delete_flag.set(1)
+date_toggle = ttk.Checkbutton(mainframe, variable=delete_flag, command=show_or_hide_date)
+date_toggle.grid(column=2, row=date_row, sticky=(W, E))
+
+ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=5, sticky=E)
+
 
 for child in mainframe.winfo_children():
     child.grid_configure(padx=5, pady=5)
-
 
 root.bind('<Return>', run_process)
 root.mainloop()
