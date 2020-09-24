@@ -102,17 +102,13 @@ def run_process():
     format_titles.set_align('vcenter')
 
     # Loop through sheets
-    for item in columns_required:
-        # Get the name of the columns in the csv for this sheet
-        column_names = columns_required[item]
+    for item, column_names in columns_required.items():
         # Get the name for the sheet
         sheet_name = str(item)
         ## Start the column count at 0
         number = 0
         ## Loop through the columns
-        for col in column_names:
-            # Pick out the column name
-            column_name = column_names[col]
+        for col, column_name in column_names.items():
             # Pick out the Info
             info_item = raw_data[column_name]
             # Get unique list of options within the column
@@ -149,6 +145,8 @@ def run_process():
                 worksheet.write('A1', sheet_name, format_cells)
                 # Write the title in next row
                 worksheet.write('A2', title, format_cells)
+                # Write count next to table
+                worksheet.write(2, number + 1, len(ListOfAttendees_Ordered))
                 # Set height of first row
                 worksheet.set_row(0, 22)
                 worksheet.set_row(2, 30)
