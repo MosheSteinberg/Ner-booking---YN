@@ -62,7 +62,7 @@ shabbos_columns_required = {'Men Shacharit':{'':'I wish to attend the following 
             'Women Shacharit':{'':'I wish to attend the following SHABBAT MORNING minyan (womens section)'},
             'Kabbalat Shabbat': {'Men':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (mens section)',
                                 'Women':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (womens section)'},
-            'Mincha':{'Men':'I wish to attend the SHABBAT MINCHA minyan (mens section)',
+            'Mincha & Maariv':{'Men':'I wish to attend the SHABBAT MINCHA minyan (mens section)',
                     'Women':'I wish to attend the SHABBAT MINCHA minyan (womens section)'},
             'Children Service':{'':'I wish to attend a shabbat morning CHILDREN service'},
     }
@@ -123,7 +123,7 @@ def run_process():
             # Loop through the options
             for option in UO_sort:
                 # Find which rows match the option
-                filterrows = info_item == option
+                filterrows = split_column[option.replace(', ', '>>')]==1
                 # Title the column in Excel based on selection above
                 if col == '' or isinstance(col, int):
                     name = option
