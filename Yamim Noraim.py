@@ -17,21 +17,7 @@ def FindMIfFloat(x):
     except ValueError:
         return x
 
-def run_process():
-    input_fp = inputs_filepath.get()
-    outputs_fp = outputs_filepath.get()
-
-    raw_data = pd.read_csv(input_fp, error_bad_lines=False)
-    firstname_column = 7
-    surname_column = 8
-    raw_data.columns.values[firstname_column] = 'firstname'
-    raw_data.columns.values[surname_column] = 'surname'
-
-    writer = pd.ExcelWriter(outputs_fp, engine='xlsxwriter')
-    workbook = writer.book
-    format_titles = workbook.add_format({'text_wrap':True})
-
-    columns_required = {'Erev RH':{
+rh_columns_required = {'Erev RH':{
                             'Men':'I wish to attend the EREV ROSH HASHANA MINCHA & MAARIV minyan (Mens section)',
                             'Women':'I wish to attend the EREV ROSH HASHANA MINCHA & MAARIV minyan (womens section)'
                         },
@@ -72,7 +58,50 @@ def run_process():
                         }
     }
 
-       ## Loop through sheets
+shabbos_columns_required = {'Men Shacharit':{'':'I wish to attend the following SHABBAT MORNING minyan (mens section)'},
+            'Women Shacharit':{'':'I wish to attend the following SHABBAT MORNING minyan (womens section)'},
+            'Kabbalat Shabbat': {'Men':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (mens section)',
+                                'Women':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (womens section)'},
+            'Mincha':{'Men':'I wish to attend the SHABBAT MINCHA minyan (mens section)',
+                    'Women':'I wish to attend the SHABBAT MINCHA minyan (womens section)'},
+            'Children Service':{'':'I wish to attend a shabbat morning CHILDREN service'},
+    }
+
+def run_process():
+    input_fp = inputs_filepath.get()
+    outputs_fp = outputs_filepath.get()
+    title = label.get()
+
+    selection_value = selection.get()
+    if selection_value == "Shabbos":
+        columns_required = shabbos_columns_required
+    elif selection_value == "RH":
+        columns_required = rh_columns_required
+
+    raw_data = pd.read_csv(input_fp, error_bad_lines=False)
+    
+    firstname_column = 7
+    surname_column = 8
+    raw_data.columns.values[firstname_column] = 'firstname'
+    raw_data.columns.values[surname_column] = 'surname'
+    check_deletion = delete_flag.get()
+
+    if check_deletion == 1:
+        delete_before_date = pd.to_datetime(delete_before_entry.get_date())
+        formatted_date_column = pd.to_datetime(raw_data['Submission Date'], format='%d/%m/%y %H:%M:%S')
+        raw_data = raw_data[formatted_date_column > delete_before_date]
+
+    writer = pd.ExcelWriter(outputs_fp, engine='xlsxwriter')
+    workbook = writer.book
+    format_cells = workbook.add_format({'font_size':22})
+    format_titles = workbook.add_format()
+    format_titles.set_text_wrap()
+    format_titles.set_bold()
+    format_titles.set_border()
+    format_titles.set_align('center')
+    format_titles.set_align('vcenter')
+
+    # Loop through sheets
     for item in columns_required:
         # Get the name of the columns in the csv for this sheet
         column_names = columns_required[item]
@@ -112,15 +141,18 @@ def run_process():
                 # Select the column and set its width
                 worksheet = writer.sheets[sheet_name]
                 worksheet.set_column(number, number, len(name)+10)
+                worksheet.write(2, number, name, format_titles)
                 #print(number)
                 # Increment 2 columns across for the next list
                 number += 2
                 # Write the name in the top left
-                worksheet.write('A1', sheet_name)
+                worksheet.write('A1', sheet_name, format_cells)
+                # Write the title in next row
+                worksheet.write('A2', title, format_cells)
                 # Set height of first row
                 worksheet.set_row(0, 22)
-                worksheet.set_row(2, None, format_titles)
-
+                worksheet.set_row(2, 30)
+                worksheet.fit_to_pages(1,1)
     # Save the workbook
     writer.save()
 
@@ -145,6 +177,7 @@ def file_explore_outputs():
 
 root = Tk()
 root.title("Ner booking process")
+root.resizable(0,0)
 
 mainframe = ttk.Frame(root, padding="3 3 12 12")
 mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -160,6 +193,7 @@ input_row = 1
 output_row = 2
 date_row = 3
 Label_Row = 4
+Selection_Row = 5
 
 ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
 inputs_filepath_entry = ttk.Entry(mainframe, width=60, textvariable=inputs_filepath)
@@ -178,11 +212,6 @@ delete_before_entry.set_date(default_date)
 delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
 delete_before_entry.grid_remove()
 
-label = StringVar()
-ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
-label_entry = ttk.Entry(mainframe, textvariable=label)
-label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
-
 def show_or_hide_date():
     check_flag = delete_flag.get()
     if check_flag==0:
@@ -193,6 +222,36 @@ delete_flag = IntVar()
 delete_flag.set(1)
 date_toggle = ttk.Checkbutton(mainframe, variable=delete_flag, command=show_or_hide_date)
 date_toggle.grid(column=2, row=date_row, sticky=(W, E))
+
+label = StringVar()
+ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
+label_entry = ttk.Entry(mainframe, textvariable=label)
+label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
+
+custom_JSON = StringVar()
+def show_custom(self):
+    selection_value = selection.get()
+    if selection_value=="Custom":
+        global custom_label
+        custom_label = ttk.Label(mainframe, text="Custom JSON")
+        custom_label.grid(column=1, row=Selection_Row+1, sticky=E)
+        global JSON_entry
+        JSON_entry = ttk.Entry(mainframe, textvariable=custom_JSON)
+        JSON_entry.grid(column=2, row=Selection_Row+1, sticky=(W, E), columnspan=2)
+    else:
+        custom_label.grid_forget()
+        JSON_entry.grid_forget()
+
+
+
+ttk.Label(mainframe, text="Select type").grid(column=1, row=Selection_Row, sticky=E)
+selection = StringVar()
+#Options = ["Shabbos", "RH", "Custom"]
+Options = ["Shabbos", "RH"]
+#selection_dropdown = ttk.OptionMenu(mainframe, selection, "Pick", *Options, command=show_custom)
+selection_dropdown = ttk.OptionMenu(mainframe, selection, "Shabbos", *Options)
+selection_dropdown.grid(column=2, row=Selection_Row, sticky=(W))
+
 
 ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=5, sticky=E)
 
