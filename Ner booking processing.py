@@ -111,14 +111,15 @@ def run_process():
         for col, column_name in column_names.items():
             # Pick out the Info
             info_item = raw_data[column_name]
-            # Get unique list of options within the column
-            unique_options = info_item.dropna().unique()
-            # If > 1 option, sort by trying to find the time and turning it into a number
-            if len(unique_options)!=1:
-                UO_sort = sorted(unique_options, key=FindMIfFloat)
-            else: # if only 1 option, no sorting needed
-                UO_sort = unique_options
 
+            info_item_save_commas = info_item.str.replace(', ', '>>')
+
+            split_column = info_item_save_commas.str.get_dummies(sep=',')
+            # Get unique list of options within the column
+            unique_options = [val.replace('>>', ', ') for val in list(split_column.columns.values)]
+            print(unique_options)
+            # If > 1 option, sort by trying to find the time and turning it into a number
+            UO_sort = sorted(unique_options, key=FindMIfFloat)
             # Loop through the options
             for option in UO_sort:
                 # Find which rows match the option
