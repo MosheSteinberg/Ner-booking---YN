@@ -139,8 +139,6 @@ def run_process():
                 worksheet.set_column(number, number, len(name)+10)
                 worksheet.write(2, number, name, format_titles)
                 #print(number)
-                # Increment 2 columns across for the next list
-                number += 2
                 # Write the name in the top left
                 worksheet.write('A1', sheet_name, format_cells)
                 # Write the title in next row
@@ -151,6 +149,9 @@ def run_process():
                 worksheet.set_row(0, 22)
                 worksheet.set_row(2, 30)
                 worksheet.fit_to_pages(1,1)
+                # Increment 2 columns across for the next list
+                number += 2
+                
     # Save the workbook
     writer.save()
 
@@ -205,7 +206,7 @@ ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=4
 
 ttk.Label(mainframe, text="Delete entries from before:").grid(column=1, row=date_row, sticky=W)
 default_date = date.today() - timedelta(days=1)
-delete_before_entry = DateEntry(mainframe)
+delete_before_entry = DateEntry(mainframe, locale='en_UK')
 delete_before_entry.set_date(default_date)
 delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
 delete_before_entry.grid_remove()
