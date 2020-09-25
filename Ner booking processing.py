@@ -2,7 +2,7 @@ import pandas as pd
 import xlsxwriter
 
 from pathlib import Path
-import os
+import os, sys, json
 
 from tkinter import ttk
 from tkinter import Tk, StringVar, N, W, E, S, IntVar
@@ -17,55 +17,12 @@ def FindMIfFloat(x):
     except ValueError:
         return x
 
-rh_columns_required = {'Erev RH':{
-                            'Men':'I wish to attend the EREV ROSH HASHANA MINCHA & MAARIV minyan (Mens section)',
-                            'Women':'I wish to attend the EREV ROSH HASHANA MINCHA & MAARIV minyan (womens section)'
-                        },
-                        'Day 1 Men':{
-                            1:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (mens section)',
-                            2:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (mens section).1',
-                            3:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (mens section).2'
-                        },
-                        'Day 1 Women':{
-                            1:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (Womens section)',
-                            2:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (Womens section).1',
-                            3:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 1 (Womens section).2'
-                        },
-                       'Mincha Day 1':{
-                            'Men':'I wish to attend the ROSH HASHANA MINCHA on DAY 1 minyan (Mens section)',
-                            'Women':'I wish to attend the ROSH HASHANA MINCHA on Day 1 minyan (womens section)'
-                        },
-                        'Maariv Day 2':{
-                            'Men':'I wish to attend the MAARIV minyan on Rosh Hashanah Day 2 (Mens section)',
-                            'Women':'I wish to attend MAARIV minyan on Rosh Hashanah Day 2  (womens section)'
-                        },
-                        'Day 2 Men':{
-                            1:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (mens section)',
-                            2:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (mens section).1',
-                            3:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (mens section).2'
-                        },
-                        'Day 2 Women':{
-                            1:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (Womens section)',
-                            2:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (Womens section).1',
-                            3:'I wish to attend the following ROSH HASHANA MORNING minyanim on DAY 2 (Womens section).2'
-                        },
-                        'End of Day 2':{
-                            'Men':'I wish to attend the ROSH HASHANA MINCHA, SHIUR & MAARIV on DAY 2 minyan (Mens section)',
-                            'Women':'I wish to attend the ROSH HASHANA MINCHA, SHIUR & MAARIV on Day 2 minyan (womens section)'
-                        },
-                        'Children':{
-                            'Day 1':'I wish to attend a Rosh Hashanah Day 1 CHILDREN service (Ner campus)',
-                        }
-    }
-
-shabbos_columns_required = {'Men Shacharit':{'':'I wish to attend the following SHABBAT MORNING minyan (mens section)'},
-            'Women Shacharit':{'':'I wish to attend the following SHABBAT MORNING minyan (womens section)'},
-            'Kabbalat Shabbat': {'Men':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (mens section)',
-                                'Women':'I wish to attend the KABBALAT SHABBAT minyan at the end of the week (womens section)'},
-            'Mincha & Maariv':{'Men':'I wish to attend the SHABBAT MINCHA minyan (mens section)',
-                    'Women':'I wish to attend the SHABBAT MINCHA minyan (womens section)'},
-            'Children Service':{'':'I wish to attend a shabbat morning CHILDREN service'},
-    }
+def IsInteger(x):
+    try:
+        int(x)
+        return True
+    except:
+        return False
 
 def run_process():
     input_fp = inputs_filepath.get()
@@ -73,10 +30,9 @@ def run_process():
     title = label.get()
 
     selection_value = selection.get()
-    if selection_value == "Shabbos":
-        columns_required = shabbos_columns_required
-    elif selection_value == "RH":
-        columns_required = rh_columns_required
+    with open(selection_value, mode='r') as ner_file:
+        json_value = ner_file.read()
+        columns_required = json.loads(json_value)
 
     raw_data = pd.read_csv(input_fp, error_bad_lines=False)
     
@@ -125,7 +81,7 @@ def run_process():
                 # Find which rows match the option
                 filterrows = split_column[option.replace(', ', '>>')]==1
                 # Title the column in Excel based on selection above
-                if col == '' or isinstance(col, int):
+                if col == '' or IsInteger(col):
                     name = option
                 else:
                     name = col
@@ -228,28 +184,20 @@ ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
 label_entry = ttk.Entry(mainframe, textvariable=label)
 label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
 
-custom_JSON = StringVar()
-def show_custom(self):
-    selection_value = selection.get()
-    if selection_value=="Custom":
-        global custom_label
-        custom_label = ttk.Label(mainframe, text="Custom JSON")
-        custom_label.grid(column=1, row=Selection_Row+1, sticky=E)
-        global JSON_entry
-        JSON_entry = ttk.Entry(mainframe, textvariable=custom_JSON)
-        JSON_entry.grid(column=2, row=Selection_Row+1, sticky=(W, E), columnspan=2)
-    else:
-        custom_label.grid_forget()
-        JSON_entry.grid_forget()
-
-
-
 ttk.Label(mainframe, text="Select type").grid(column=1, row=Selection_Row, sticky=E)
 selection = StringVar()
-#Options = ["Shabbos", "RH", "Custom"]
-Options = ["Shabbos", "RH"]
-#selection_dropdown = ttk.OptionMenu(mainframe, selection, "Pick", *Options, command=show_custom)
-selection_dropdown = ttk.OptionMenu(mainframe, selection, "Shabbos", *Options)
+
+if getattr(sys, 'frozen', False):
+    current_directory = os.path.dirname(sys.executable)
+else:
+    current_directory = os.getcwd()
+Options = [json_file for json_file in os.listdir(current_directory) if json_file.endswith('.ner')]
+if 'Shabbos.ner' in Options:
+    Default = 'Shabbos.ner'
+else:
+    Default = Options[0]
+
+selection_dropdown = ttk.OptionMenu(mainframe, selection, Default, *Options)
 selection_dropdown.grid(column=2, row=Selection_Row, sticky=(W))
 
 
