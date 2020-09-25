@@ -85,8 +85,22 @@ def run_process():
                     name = option
                 else:
                     name = col
+
+                list_of_attendees_name = (raw_data['surname'] + ', ' + raw_data['firstname'])[filterrows].rename(name)
+                list_of_attendees_booker_name = raw_data['Person'][filterrows]
+
+                list_of_attendees_combined = pd.concat([list_of_attendees_name, list_of_attendees_booker_name], axis=1)
+
+
+                duplicate_flag = list_of_attendees_name.duplicated(keep=False)
+                list_of_attendees_name_no_duplicates = list_of_attendees_name.drop_duplicates()                
+                duplicate_both_flag = list_of_attendees_combined[duplicate_flag].duplicated(keep=False)                
+                duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
+                extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
+
+
                 # Filter the attendees and apply a header to the column
-                ListOfAttendees_Unordered = (raw_data['surname'] + ', ' + raw_data['firstname'])[filterrows].rename(name)
+                ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
                 # Order the attendees alphabetically
                 ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values()
                 # Write the list to Excel in the 3rd row
