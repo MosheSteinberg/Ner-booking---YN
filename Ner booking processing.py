@@ -61,6 +61,8 @@ def run_process():
         format_titles.set_border()
         format_titles.set_align('center')
         format_titles.set_align('vcenter')
+        format_counts = workbook.add_format()
+        format_counts.set_align('center')
 
         # Loop through sheets
         for item, column_names in columns_required.items():
@@ -125,7 +127,10 @@ def run_process():
                         ListOfAttendees_Ordered[start_row:end_row].to_excel(writer, sheet_name, index=False, startcol=number+i, startrow=3, header=False)
                     # Select the column and set its width
                     worksheet = writer.sheets[sheet_name]
-                    worksheet.set_column(number, number + output_columns - 1, len(name)+10)
+
+                    max_name_length = ListOfAttendees_Ordered.map(lambda x: len(x)).max()
+                    column_width = max(len(name)/2, max_name_length)
+                    worksheet.set_column(number, number + output_columns - 1, column_width)
                     worksheet.write(2, number, name, format_titles)
                     #print(number)
                     # Write the name in the top left
@@ -133,7 +138,7 @@ def run_process():
                     # Write the title in next row
                     worksheet.write('A2', title, format_cells)
                     # Write count next to table
-                    worksheet.write(2, number + output_columns, number_of_attendees)
+                    worksheet.write(2, number + 1, number_of_attendees, format_counts)
                     # Set height of first row
                     worksheet.set_row(0, 22)
                     worksheet.set_row(2, 30)
