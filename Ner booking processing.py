@@ -10,12 +10,15 @@ from tkinter import filedialog, PhotoImage
 from tkcalendar import DateEntry
 from datetime import date, timedelta
 from pandas import to_datetime
+import re
 
 def FindMIfFloat(x):
-    try:
-        return float(x[:(x.find('m ')-1)])
-    except ValueError:
+    matchstring = '\d{1,2}([:.]\d\d)?'
+    find_time = re.search(matchstring, x)
+    if find_time is None:
         return x
+    else:
+        return float(re.sub(':', '.', find_time.group()))
 
 def IsInteger(x):
     try:
