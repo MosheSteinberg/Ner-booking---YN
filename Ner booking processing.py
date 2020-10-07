@@ -6,10 +6,11 @@ import os, sys, json
 
 from tkinter import ttk
 from tkinter import Tk, StringVar, N, W, E, S, IntVar
-from tkinter import filedialog, PhotoImage
+from tkinter import filedialog, PhotoImage, messagebox
 from tkcalendar import DateEntry
 from datetime import date, timedelta
 from pandas import to_datetime
+import traceback
 import re
 
 def FindMIfFloat(x):
@@ -28,111 +29,125 @@ def IsInteger(x):
         return False
 
 def run_process():
-    input_fp = inputs_filepath.get()
-    outputs_fp = outputs_filepath.get()
-    title = label.get()
+    try:
+        input_fp = inputs_filepath.get()
+        outputs_fp = outputs_filepath.get()
+        title = label.get()
 
-    selection_value = selection.get()
-    with open(selection_value, mode='r') as ner_file:
-        json_value = ner_file.read()
-        columns_required = json.loads(json_value)
+        selection_value = selection.get()
+        with open(selection_value, mode='r') as ner_file:
+            json_value = ner_file.read()
+            columns_required = json.loads(json_value)
 
-    raw_data = pd.read_csv(input_fp, error_bad_lines=False)
-    
-    firstname_column = 7
-    surname_column = 8
-    raw_data.columns.values[firstname_column] = 'firstname'
-    raw_data.columns.values[surname_column] = 'surname'
-    check_deletion = delete_flag.get()
+        raw_data = pd.read_csv(input_fp, error_bad_lines=False, dtype='str')
+        
+        firstname_column = 7
+        surname_column = 8
+        raw_data.columns.values[firstname_column] = 'firstname'
+        raw_data.columns.values[surname_column] = 'surname'
+        check_deletion = delete_flag.get()
 
-    if check_deletion == 1:
-        delete_before_date = pd.to_datetime(delete_before_entry.get_date())
-        formatted_date_column = pd.to_datetime(raw_data['Submission Date'], format='%d/%m/%y %H:%M:%S')
-        raw_data = raw_data[formatted_date_column > delete_before_date]
+        if check_deletion == 1:
+            delete_before_date = pd.to_datetime(delete_before_entry.get_date())
+            formatted_date_column = pd.to_datetime(raw_data['Submission Date'], format='%d/%m/%y %H:%M:%S')
+            raw_data = raw_data[formatted_date_column > delete_before_date]
 
-    writer = pd.ExcelWriter(outputs_fp, engine='xlsxwriter')
-    workbook = writer.book
-    format_cells = workbook.add_format({'font_size':22})
-    format_titles = workbook.add_format()
-    format_titles.set_text_wrap()
-    format_titles.set_bold()
-    format_titles.set_border()
-    format_titles.set_align('center')
-    format_titles.set_align('vcenter')
+        writer = pd.ExcelWriter(outputs_fp, engine='xlsxwriter')
+        workbook = writer.book
+        format_cells = workbook.add_format({'font_size':22})
+        format_titles = workbook.add_format()
+        format_titles.set_text_wrap()
+        format_titles.set_bold()
+        format_titles.set_border()
+        format_titles.set_align('center')
+        format_titles.set_align('vcenter')
 
-    # Loop through sheets
-    for item, column_names in columns_required.items():
-        # Get the name for the sheet
-        sheet_name = str(item)
-        ## Start the column count at 0
-        number = 0
-        ## Loop through the columns
-        for col, column_name in column_names.items():
-            # Pick out the Info
-            info_item = raw_data[column_name]
+        # Loop through sheets
+        for item, column_names in columns_required.items():
+            # Get the name for the sheet
+            sheet_name = str(item)
+            ## Start the column count at 0
+            number = 0
+            ## Loop through the columns
+            for col, column_name in column_names.items():
+                # Pick out the Info
+                info_item = raw_data.get(column_name)
 
-            info_item_save_commas = info_item.str.replace(', ', '>>')
+                if info_item is None:
+                    messagebox.showwarning(title='Column not found', detail=column_name + ' was not found')
+                    continue
 
-            split_column = info_item_save_commas.str.get_dummies(sep=',')
-            # Get unique list of options within the column
-            unique_options = [val.replace('>>', ', ') for val in list(split_column.columns.values)]
-            print(unique_options)
-            # If > 1 option, sort by trying to find the time and turning it into a number
-            UO_sort = sorted(unique_options, key=FindMIfFloat)
-            # Loop through the options
-            for option in UO_sort:
-                # Find which rows match the option
-                filterrows = split_column[option.replace(', ', '>>')]==1
-                # Title the column in Excel based on selection above
-                if col == '' or IsInteger(col):
-                    name = option
-                else:
-                    name = col
+                info_item_save_commas = info_item.str.replace(', ', '>>')
 
-                list_of_attendees_name = (raw_data['surname'] + ', ' + raw_data['firstname'])[filterrows].rename(name)
-                list_of_attendees_booker_name = raw_data['Person'][filterrows]
+                split_column = info_item_save_commas.str.get_dummies(sep=',')
+                # Get unique list of options within the column
+                unique_options = [val.replace('>>', ', ') for val in list(split_column.columns.values)]
+                print(unique_options)
+                # If > 1 option, sort by trying to find the time and turning it into a number
+                UO_sort = sorted(unique_options, key=FindMIfFloat)
+                # Loop through the options
+                for option in UO_sort:
+                    # Find which rows match the option
+                    filterrows = split_column[option.replace(', ', '>>')]==1
+                    # Title the column in Excel based on selection above
+                    if col == '' or IsInteger(col):
+                        name = option
+                    else:
+                        name = col
 
-                list_of_attendees_combined = pd.concat([list_of_attendees_name, list_of_attendees_booker_name], axis=1)
+                    list_of_attendees_name = (raw_data['surname'] + ', ' + raw_data['firstname'])[filterrows].rename(name)
+                    list_of_attendees_booker_name = raw_data['Person'][filterrows]
 
-
-                duplicate_flag = list_of_attendees_name.duplicated(keep=False)
-                list_of_attendees_name_no_duplicates = list_of_attendees_name.drop_duplicates()                
-                duplicate_both_flag = list_of_attendees_combined[duplicate_flag].duplicated(keep=False)                
-                duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
-                extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
+                    list_of_attendees_combined = pd.concat([list_of_attendees_name, list_of_attendees_booker_name], axis=1)
 
 
-                # Filter the attendees and apply a header to the column
-                ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
-                # Order the attendees alphabetically
-                ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values()
-                # Write the list to Excel in the 3rd row
-                ListOfAttendees_Ordered.to_excel(writer, sheet_name, index=False, startcol=number, startrow=2)
-                # Select the column and set its width
-                worksheet = writer.sheets[sheet_name]
-                worksheet.set_column(number, number, len(name)+10)
-                worksheet.write(2, number, name, format_titles)
-                #print(number)
-                # Write the name in the top left
-                worksheet.write('A1', sheet_name, format_cells)
-                # Write the title in next row
-                worksheet.write('A2', title, format_cells)
-                # Write count next to table
-                worksheet.write(2, number + 1, len(ListOfAttendees_Ordered))
-                # Set height of first row
-                worksheet.set_row(0, 22)
-                worksheet.set_row(2, 30)
-                worksheet.fit_to_pages(1,1)
-                # Increment 2 columns across for the next list
-                number += 2
-                
-    # Save the workbook
-    writer.save()
+                    duplicate_flag = list_of_attendees_name.duplicated(keep=False)
+                    list_of_attendees_name_no_duplicates = list_of_attendees_name.drop_duplicates()                
+                    duplicate_both_flag = list_of_attendees_combined[duplicate_flag].duplicated(keep=False)                
+                    duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
+                    extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
 
-    # Open the workbook for the user
-    os.startfile(outputs_fp)
 
-    return 0
+                    # Filter the attendees and apply a header to the column
+                    ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
+                    # Order the attendees alphabetically
+                    ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values()
+
+                    # Count attendees
+                    number_of_attendees = len(ListOfAttendees_Ordered)
+
+                    output_columns = number_of_attendees // 40 + 1
+
+                    for i in range(output_columns):
+                        start_row = i * 40
+                        end_row = min((i+1) * 40, number_of_attendees)
+                        # Write the list to Excel in the 3rd row
+                        ListOfAttendees_Ordered[start_row:end_row].to_excel(writer, sheet_name, index=False, startcol=number+i, startrow=3, header=False)
+                    # Select the column and set its width
+                    worksheet = writer.sheets[sheet_name]
+                    worksheet.set_column(number, number + output_columns - 1, len(name)+10)
+                    worksheet.write(2, number, name, format_titles)
+                    #print(number)
+                    # Write the name in the top left
+                    worksheet.write('A1', sheet_name, format_cells)
+                    # Write the title in next row
+                    worksheet.write('A2', title, format_cells)
+                    # Write count next to table
+                    worksheet.write(2, number + output_columns, number_of_attendees)
+                    # Set height of first row
+                    worksheet.set_row(0, 22)
+                    worksheet.set_row(2, 30)
+                    worksheet.fit_to_pages(1,1)
+                    # Increment 2 columns across for the next list
+                    number += 1 + output_columns
+                    
+        # Save the workbook
+        writer.save()
+
+        # Open the workbook for the user
+        os.startfile(outputs_fp)
+    except:
+        messagebox.showerror(title="Python error", detail= traceback.format_exc())
 
 def file_explore_inputs():
     filename = filedialog.askopenfilename(initialdir=os.path.join(Path.home(), 'Downloads'),
