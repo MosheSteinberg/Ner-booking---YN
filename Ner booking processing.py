@@ -47,6 +47,8 @@ def run_process():
         raw_data.columns.values[surname_column] = 'surname'
         check_deletion = delete_flag.get()
 
+        check_duplicates = duplicates_flag.get()
+
         if check_deletion == 1:
             delete_before_date = pd.to_datetime(delete_before_entry.get_date())
             formatted_date_column = pd.to_datetime(raw_data['Submission Date'], format='%d/%m/%y %H:%M:%S')
@@ -63,6 +65,8 @@ def run_process():
         format_titles.set_align('vcenter')
         format_counts = workbook.add_format()
         format_counts.set_align('center')
+
+        format_duplicates = workbook.add_format({'bg_color':'red', 'font_color':'white'})
 
         # Loop through sheets
         for item, column_names in columns_required.items():
@@ -109,7 +113,7 @@ def run_process():
                     duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
                     extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
 
-                    if False:
+                    if check_duplicates==0:
                         ListOfAttendees_Unordered = list_of_attendees_name
                     else:
                         # Filter the attendees and apply a header to the column
@@ -129,6 +133,9 @@ def run_process():
                         ListOfAttendees_Ordered[start_row:end_row].to_excel(writer, sheet_name, index=False, startcol=number+i, startrow=3, header=False)
                     # Select the column and set its width
                     worksheet = writer.sheets[sheet_name]
+
+                    if check_duplicates==0:
+                        worksheet.conditional_format(3, number, 42, number+output_columns-1, {'type':'duplicate', 'format':format_duplicates})
 
                     print(type(ListOfAttendees_Ordered))
                     try:
@@ -194,6 +201,7 @@ output_row = 2
 date_row = 3
 Label_Row = 4
 Selection_Row = 5
+duplicates_row = 6
 
 ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
 inputs_filepath_entry = ttk.Entry(mainframe, width=60, textvariable=inputs_filepath)
@@ -244,8 +252,14 @@ else:
 selection_dropdown = ttk.OptionMenu(mainframe, selection, Default, *Options)
 selection_dropdown.grid(column=2, row=Selection_Row, sticky=(W))
 
+ttk.Label(mainframe, text="Remove duplicates").grid(column=1, row=duplicates_row, sticky=E)
+duplicates_flag = IntVar()
+duplicates_flag.set(1)
+duplicates_toggle = ttk.Checkbutton(mainframe, variable=duplicates_flag)
+duplicates_toggle.grid(column=2, row=duplicates_row, sticky=(W, E))
 
-ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=5, sticky=E)
+
+ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=6, sticky=E)
 
 
 for child in mainframe.winfo_children():
