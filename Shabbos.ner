@@ -1,7 +1,23 @@
-{"Men Shacharit": {"": "I wish to attend the following SHABBAT MORNING minyan (mens section)"}, 
- "Women Shacharit": {"": "I wish to attend the following SHABBAT MORNING minyan (womens section)"}, 
- "Kabbalat Shabbat": {"Men": "I wish to attend the KABBALAT SHABBAT minyan at the end of the week (mens section)", 
-                    "Women": "I wish to attend the KABBALAT SHABBAT minyan at the end of the week (womens section)"}, 
- "Mincha & Maariv": {"1": "I wish to attend the SHABBAT MINCHA minyan (mens section)", 
-                    "2": "I wish to attend the SHABBAT MINCHA minyan (womens section)"}, 
- "Children Service": {"": "I wish to attend a shabbat morning CHILDREN service"}}
+{
+  "Kabbalat Shabbat": {
+    "Men": "I wish to attend MINCHA and KABBALAT SHABBAT (mens section)",
+    "Women": "I wish to attend MINCHA and KABBALAT SHABBAT (womens section)"
+  },
+  "Men Shacharit": {
+    "1": "I wish to attend the following SHABBAT MORNING minyan (mens section)"
+  },
+  "Women Shacharit": {
+    "1": "I wish to attend the following SHABBAT MORNING minyan (womens section)"
+  },
+  "Early Mincha": {
+    "Men": "I wish to attend EARLY SHABBAT MINCHA (men's section)",
+    "Women": "I wish to attend EARLY SHABBAT MINCHA (women's section)"
+  },
+  "Later Mincha-Maariv": {
+    "Men": "I wish to attend the LATER SHABBAT MINCHA minyan FOLLOWED BY A SHIUR and MAARIV (mens section)",
+    "Women": "I wish to attend the LATER SHABBAT MINCHA minyan FOLLOWED BY A SHIUR and MAARIV (womens section)  "
+  },
+  "Children Service": {
+    "1": "I wish to attend a shabbat morning CHILDREN service"
+  }
+}
