@@ -109,9 +109,11 @@ def run_process():
                     duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
                     extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
 
-
-                    # Filter the attendees and apply a header to the column
-                    ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
+                    if False:
+                        ListOfAttendees_Unordered = list_of_attendees_name
+                    else:
+                        # Filter the attendees and apply a header to the column
+                        ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
                     # Order the attendees alphabetically
                     ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values()
 
@@ -128,7 +130,11 @@ def run_process():
                     # Select the column and set its width
                     worksheet = writer.sheets[sheet_name]
 
-                    max_name_length = ListOfAttendees_Ordered.map(lambda x: len(x)).max()
+                    print(type(ListOfAttendees_Ordered))
+                    try:
+                        max_name_length = ListOfAttendees_Ordered.map(lambda x: len(x)).max()
+                    except:
+                        max_name_length = 20
                     column_width = max(len(name)/2, max_name_length)
                     worksheet.set_column(number, number + output_columns - 1, column_width)
                     worksheet.write(2, number, name, format_titles)
@@ -143,6 +149,7 @@ def run_process():
                     worksheet.set_row(0, 22)
                     worksheet.set_row(2, 30)
                     worksheet.fit_to_pages(1,1)
+                    worksheet.set_paper(9)
                     # Increment 2 columns across for the next list
                     number += 1 + output_columns
                     
@@ -199,7 +206,7 @@ outputs_filepath_entry.grid(column=2, row=output_row, sticky=(W, E), columnspan=
 ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=4, row=output_row, sticky=W)
 
 ttk.Label(mainframe, text="Delete entries from before:").grid(column=1, row=date_row, sticky=W)
-default_date = date.today() - timedelta(days=1)
+default_date = date.today() - timedelta(days=2)
 delete_before_entry = DateEntry(mainframe, locale='en_UK')
 delete_before_entry.set_date(default_date)
 delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
