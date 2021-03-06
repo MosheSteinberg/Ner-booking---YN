@@ -119,7 +119,7 @@ def run_process():
                         # Filter the attendees and apply a header to the column
                         ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
                     # Order the attendees alphabetically
-                    ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values()
+                    ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values(key=lambda x:x.str.lower())
 
                     # Count attendees
                     number_of_attendees = len(ListOfAttendees_Ordered)
