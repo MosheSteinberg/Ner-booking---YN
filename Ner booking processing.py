@@ -182,6 +182,9 @@ def file_explore_outputs():
         filename = filename + '.xlsx'
     outputs_filepath.set(filename)
 
+if os.environ['USERNAME']=='SteinbergMoshe':
+    import get_from_web
+
 root = Tk()
 root.title("Ner booking process")
 root.resizable(0,0)
