@@ -204,7 +204,7 @@ Selection_Row = 5
 duplicates_row = 6
 
 downloads_folder = os.path.join(os.environ['USERPROFILE'], "Downloads")
-files_in_downloads = [os.path.join(downloads_folder, x) for x in os.listdir(downloads_folder)]
+files_in_downloads = [os.path.join(downloads_folder, x) for x in os.listdir(downloads_folder) if x.endswith('.csv')]
 inputs_filepath.set(max(files_in_downloads, key=os.path.getctime))
 
 ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
