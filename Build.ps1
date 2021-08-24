@@ -1,0 +1,1 @@
+pyinstaller '.\Ner booking processing.py' -F --windowed --hidden-import babel.numbers
