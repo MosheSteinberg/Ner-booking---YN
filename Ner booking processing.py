@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import xlsxwriter
 
 from pathlib import Path
@@ -87,10 +88,11 @@ def run_process():
 
                 split_column = info_item_save_commas.str.get_dummies(sep=',')
                 # Get unique list of options within the column
-                unique_options = [val.replace('>>', ', ') for val in list(split_column.columns.values)]
+                unique_options_with_dash = [val.replace('>>', ', ') for val in list(split_column.columns.values)]
+                unique_options = [i for i in unique_options_with_dash if i!='-']
                 print(unique_options)
                 # If > 1 option, sort by trying to find the time and turning it into a number
-                UO_sort = sorted(unique_options, key=FindMIfFloat)
+                UO_sort = sorted(unique_options)#, key=FindMIfFloat)
                 # Loop through the options
                 for option in UO_sort:
                     # Find which rows match the option
@@ -101,14 +103,14 @@ def run_process():
                     else:
                         name = col
 
-                    list_of_attendees_name = (raw_data['surname'] + ', ' + raw_data['firstname'])[filterrows].rename(name)
+                    list_of_attendees_name = (raw_data['surname'].replace(np.nan, '', regex=True) + ', ' + raw_data['firstname'].replace(np.nan, '', regex=True))[filterrows].rename(name)
                     list_of_attendees_booker_name = raw_data['Person'][filterrows]
 
                     list_of_attendees_combined = pd.concat([list_of_attendees_name, list_of_attendees_booker_name], axis=1)
 
 
                     duplicate_flag = list_of_attendees_name.duplicated(keep=False)
-                    list_of_attendees_name_no_duplicates = list_of_attendees_name.drop_duplicates()                
+                    list_of_attendees_name_no_duplicates = list_of_attendees_name.drop_duplicates()
                     duplicate_both_flag = list_of_attendees_combined[duplicate_flag].duplicated(keep=False)                
                     duplicates_with_different_booker = ~(list_of_attendees_booker_name[duplicate_flag] == list_of_attendees_name[duplicate_flag])
                     extra_names = list_of_attendees_booker_name[duplicate_flag][ ~duplicate_both_flag & duplicates_with_different_booker].rename(name)
@@ -117,7 +119,7 @@ def run_process():
                         ListOfAttendees_Unordered = list_of_attendees_name
                     else:
                         # Filter the attendees and apply a header to the column
-                        ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names)
+                        ListOfAttendees_Unordered = list_of_attendees_name_no_duplicates.append(extra_names).drop_duplicates()
                     # Order the attendees alphabetically
                     ListOfAttendees_Ordered = ListOfAttendees_Unordered.sort_values(key=lambda x:x.str.lower())
 
@@ -182,95 +184,101 @@ def file_explore_outputs():
         filename = filename + '.xlsx'
     outputs_filepath.set(filename)
 
-if os.environ['USERNAME']=='SteinbergMoshe':
-    import get_from_web
+if __name__=="__main__":
+    try:
+        should_I_download = sys.argv[1] == "Download"
+    except:
+        should_I_download = False
+    
+    if os.environ['USERNAME']=='SteinbergMoshe' and should_I_download:
+        import get_from_web
 
-root = Tk()
-root.title("Ner booking process")
-root.resizable(0,0)
+    root = Tk()
+    root.title("Ner booking process")
+    root.resizable(0,0)
 
-mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)	
+    mainframe = ttk.Frame(root, padding="3 3 12 12")
+    mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+    root.columnconfigure(0, weight=1)
+    root.rowconfigure(0, weight=1)	
 
-inputs_filepath = StringVar()
-outputs_filepath = StringVar()
-label = StringVar()
-delete_before = StringVar()
+    inputs_filepath = StringVar()
+    outputs_filepath = StringVar()
+    label = StringVar()
+    delete_before = StringVar()
 
-input_row = 1
-output_row = 2
-date_row = 3
-Label_Row = 4
-Selection_Row = 5
-duplicates_row = 6
+    input_row = 1
+    output_row = 2
+    date_row = 3
+    Label_Row = 4
+    Selection_Row = 5
+    duplicates_row = 6
 
-downloads_folder = os.path.join(os.environ['USERPROFILE'], "Downloads")
-files_in_downloads = [os.path.join(downloads_folder, x) for x in os.listdir(downloads_folder) if x.endswith('.csv')]
-inputs_filepath.set(max(files_in_downloads, key=os.path.getctime))
+    downloads_folder = os.path.join(os.environ['USERPROFILE'], "Downloads")
+    files_in_downloads = [os.path.join(downloads_folder, x) for x in os.listdir(downloads_folder) if x.endswith('.csv')]
+    inputs_filepath.set(max(files_in_downloads, key=os.path.getctime))
 
-ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
-inputs_filepath_entry = ttk.Entry(mainframe, width=60, textvariable=inputs_filepath)
-inputs_filepath_entry.grid(column=2, row=input_row, sticky=(W, E), columnspan=2)
-ttk.Button(mainframe, text="Browse", command=file_explore_inputs).grid(column=4, row=input_row, sticky=W)
+    ttk.Label(mainframe, text="Location of csv file").grid(column=1, row=input_row, sticky=W)
+    inputs_filepath_entry = ttk.Entry(mainframe, width=60, textvariable=inputs_filepath)
+    inputs_filepath_entry.grid(column=2, row=input_row, sticky=(W, E), columnspan=2)
+    ttk.Button(mainframe, text="Browse", command=file_explore_inputs).grid(column=4, row=input_row, sticky=W)
 
-ttk.Label(mainframe, text="Name of output file").grid(column=1, row=output_row, sticky=W)
-outputs_filepath_entry = ttk.Entry(mainframe, textvariable=outputs_filepath)
-outputs_filepath_entry.grid(column=2, row=output_row, sticky=(W, E), columnspan=2)
-ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=4, row=output_row, sticky=W)
+    ttk.Label(mainframe, text="Name of output file").grid(column=1, row=output_row, sticky=W)
+    outputs_filepath_entry = ttk.Entry(mainframe, textvariable=outputs_filepath)
+    outputs_filepath_entry.grid(column=2, row=output_row, sticky=(W, E), columnspan=2)
+    ttk.Button(mainframe, text="Browse", command=file_explore_outputs).grid(column=4, row=output_row, sticky=W)
 
-ttk.Label(mainframe, text="Delete entries from before:").grid(column=1, row=date_row, sticky=W)
-default_date = date.today() - timedelta(days=2)
-delete_before_entry = DateEntry(mainframe, locale='en_UK')
-delete_before_entry.set_date(default_date)
-delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
-delete_before_entry.grid_remove()
+    ttk.Label(mainframe, text="Delete entries from before:").grid(column=1, row=date_row, sticky=W)
+    default_date = date.today() - timedelta(days=2)
+    delete_before_entry = DateEntry(mainframe, locale='en_UK')
+    delete_before_entry.set_date(default_date)
+    delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
+    delete_before_entry.grid_remove()
 
-def show_or_hide_date():
-    check_flag = delete_flag.get()
-    if check_flag==0:
-        delete_before_entry.grid_remove()
-    elif check_flag==1:
-        delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
-delete_flag = IntVar()
-delete_flag.set(1)
-date_toggle = ttk.Checkbutton(mainframe, variable=delete_flag, command=show_or_hide_date)
-date_toggle.grid(column=2, row=date_row, sticky=(W, E))
+    def show_or_hide_date():
+        check_flag = delete_flag.get()
+        if check_flag==0:
+            delete_before_entry.grid_remove()
+        elif check_flag==1:
+            delete_before_entry.grid(column=3, row=date_row, sticky=(W, E))
+    delete_flag = IntVar()
+    delete_flag.set(0)
+    date_toggle = ttk.Checkbutton(mainframe, variable=delete_flag, command=show_or_hide_date)
+    date_toggle.grid(column=2, row=date_row, sticky=(W, E))
 
-label = StringVar()
-ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
-label_entry = ttk.Entry(mainframe, textvariable=label)
-label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
+    label = StringVar()
+    ttk.Label(mainframe, text="Label").grid(column=1, row=Label_Row, sticky=W)
+    label_entry = ttk.Entry(mainframe, textvariable=label)
+    label_entry.grid(column=2, row=Label_Row, columnspan=2, sticky=(W, E))
 
-ttk.Label(mainframe, text="Select type").grid(column=1, row=Selection_Row, sticky=E)
-selection = StringVar()
+    ttk.Label(mainframe, text="Select type").grid(column=1, row=Selection_Row, sticky=E)
+    selection = StringVar()
 
-if getattr(sys, 'frozen', False):
-    current_directory = os.path.dirname(sys.executable)
-else:
-    current_directory = os.getcwd()
-Options = [json_file for json_file in os.listdir(current_directory) if json_file.endswith('.ner')]
-if 'Shabbos.ner' in Options:
-    Default = 'Shabbos.ner'
-else:
-    Default = Options[0]
+    if getattr(sys, 'frozen', False):
+        current_directory = os.path.dirname(sys.executable)
+    else:
+        current_directory = os.getcwd()
+    Options = [json_file for json_file in os.listdir(current_directory) if json_file.endswith('.ner')]
+    if 'Shabbos.ner' in Options:
+        Default = 'Shabbos.ner'
+    else:
+        Default = Options[0]
 
-selection_dropdown = ttk.OptionMenu(mainframe, selection, Default, *Options)
-selection_dropdown.grid(column=2, row=Selection_Row, sticky=(W))
+    selection_dropdown = ttk.OptionMenu(mainframe, selection, Default, *Options)
+    selection_dropdown.grid(column=2, row=Selection_Row, sticky=(W))
 
-ttk.Label(mainframe, text="Remove duplicates").grid(column=1, row=duplicates_row, sticky=E)
-duplicates_flag = IntVar()
-duplicates_flag.set(1)
-duplicates_toggle = ttk.Checkbutton(mainframe, variable=duplicates_flag)
-duplicates_toggle.grid(column=2, row=duplicates_row, sticky=(W, E))
-
-
-ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=6, sticky=E)
+    ttk.Label(mainframe, text="Remove duplicates").grid(column=1, row=duplicates_row, sticky=E)
+    duplicates_flag = IntVar()
+    duplicates_flag.set(1)
+    duplicates_toggle = ttk.Checkbutton(mainframe, variable=duplicates_flag)
+    duplicates_toggle.grid(column=2, row=duplicates_row, sticky=(W, E))
 
 
-for child in mainframe.winfo_children():
-    child.grid_configure(padx=5, pady=5)
+    ttk.Button(mainframe, text="Run", command=run_process).grid(column=4, row=6, sticky=E)
 
-root.bind('<Return>', run_process)
-root.mainloop()
+
+    for child in mainframe.winfo_children():
+        child.grid_configure(padx=5, pady=5)
+
+    root.bind('<Return>', run_process)
+    root.mainloop()

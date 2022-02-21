@@ -1,0 +1,46 @@
+{
+  "Women RH1": {
+    "6:45 Hashk": "Rosh Hashanah Day 1 (Womens).2",
+    "7:45 YABM": "Rosh Hashanah Day 1 (Womens).1",
+    "8:15 Main": "Rosh Hashanah Day 1 (Womens)",
+    "8:15 Hasmo": "Rosh Hashana Day 1 (Womens)"
+  },
+  "Men RH1": {
+    "6:45 Hashk": "Rosh Hashanah Day 1 (Men).2",
+    "7:45 YABM": "Rosh Hashanah Day 1 (Men).1",
+    "8:15 Main": "Rosh Hashanah Day 1 (Men)",
+    "8:15 Hasmo": "Rosh Hashana Day 1 (Men)"
+  },
+  "Women RH2": {
+    "8:15 Main": "Rosh Hashana Day 2 (Womens)",
+    "7:45 YABM": "Rosh Hashana Day 2 (Womens).1",
+    "8:15 Hasmo": "Rosh Hashana Day 2 (Womens).2",
+    "6:45 Hashk": "Rosh Hashanah Day 2 (Womens)"
+  },
+  "Men RH2": {
+    "8:15 Main": "Rosh Hashana Day 2 (Men)",
+    "7:45 YABM": "Rosh Hashana Day 2 (Men).1",
+    "8:15 Hasmo": "Rosh Hashana Day 2 (Men).2",
+    "6:45 Hashk": "Rosh Hashanah Day 2 (Men)"
+  },
+  "Women KN": {
+    "Main": "Kol Nidre (Womens)",
+    "YABM": "Kol Nidre (Womens).1",
+    "Hasmo": "Kol Nidre (Womens).2"
+  },
+  "Men KN": {
+    "Main": "Kol Nidre (Men)",
+    "YABM": "Kol Nidre (Men).1",
+    "Hasmo": "Kol Nidre (Men).2"
+  },
+  "Women YK": {
+    "Main": "Yom Kippur (Womens)",
+    "YABM": "Yom Kippur (Womens).1",
+    "Hasmo": "Yom Kippur (Womens).2"
+  },
+  "Men YK": {
+    "Main": "Yom Kippur (Men)",
+    "YABM": "Yom Kippur (Men).1",
+    "Hasmo": "Yom Kippur (Mens)"
+  }
+}
