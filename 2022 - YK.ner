@@ -1,0 +1,38 @@
+{
+  "Women KN Main": {
+    "1": "Kol Nidre (Womens)"
+  },
+  "Women KN YA": {
+    "1": "Kol Nidre (Womens).1"
+  },
+  "Women KN Hasmo": {
+    "1": "Kol Nidre (Womens).2"
+  },
+  "Men KN Main": {
+    "1": "Kol Nidre (Men)"
+  },
+  "Men KN YA": {
+    "1": "Kol Nidre (Men).1"
+  },
+  "Men KN Hasmo": {
+    "1": "Kol Nidre (Men).2"
+  },
+  "Women YK Main": {
+    "1": "Yom Kippur (Womens)"
+  },
+  "Women YK YA": {
+    "1": "Yom Kippur (Womens).1"
+  },
+  "Women YK Hasmo": {
+    "1": "Yom Kippur (Womens).2"
+  },
+  "Men YK Main": {
+    "1": "Yom Kippur (Men)"
+  },
+  "Men YK YA": {
+    "1": "Yom Kippur (Men).1"
+  },
+  "Men YK Hasmo": {
+    "1": "Yom Kippur (Mens)"
+  }
+}
