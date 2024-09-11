@@ -40,7 +40,7 @@ def run_process():
             json_value = ner_file.read()
             columns_required = json.loads(json_value)
 
-        raw_data = pd.read_csv(input_fp, error_bad_lines=False, dtype='str')
+        raw_data = pd.read_csv(input_fp, on_bad_lines='skip', dtype='str')
         
         firstname_column = 7
         surname_column = 8
@@ -163,7 +163,7 @@ def run_process():
                     number += 1 + output_columns
                     
         # Save the workbook
-        writer.save()
+        writer.close()
 
         # Open the workbook for the user
         os.startfile(outputs_fp)
