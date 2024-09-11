@@ -5,3 +5,4 @@ dist/*
 *.pyc
 environment/*
 Old .ner files/*
+venv/*
